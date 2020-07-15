@@ -1,0 +1,60 @@
+airflow:
+  # Don't use this fernet key in production!
+  #fernet_key: "j0PNE8131Vx-ix7BsNDwskFUlnLa00mWU17BRujVcdY="
+  image:
+#    repository: 722001489576.dkr.ecr.eu-west-1.amazonaws.com/airflow 
+    repository: apache/airflow 
+    tag: latest
+    pull_policy: IfNotPresent
+  config:
+  logs:
+    persistence:
+      existingClaim: nfs-airflow-logs
+  dags:
+#    path: /usr/local/airflow/dags
+    path: /opt/airflow/dags
+    donot_pickle: false
+    persistence:
+      enabled: true
+      existingClaim: nfs-airflow-dags
+      init_dags: |
+        set -x
+        git clone https://github.com/apache/airflow.git
+        cp -r airflow/airflow/example_dags/* /opt/airflow/dags 					#/usr/local/airflow/dags/
+  rbac:
+    enabled: false
+
+
+ingress:
+  enabled: true
+
+postgresql:
+  enabled: true
+  postgresUser: postgres
+  postgresPassword: airflow
+  postgresDatabase: airflow
+  persistence:
+    enabled: true
+    accessMode: ReadWriteOnce
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: airflow
+  labels:
+    app: airflow
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+    value: 0.0.0.0/0
+spec:
+  # comment or delete the following line if you want to use a LoadBalancer
+  #type: NodePort
+  # if your cluster supports it, uncomment the following to automatically create
+  # an external load-balanced IP for the frontend service.
+  type: LoadBalancer
+  ports:
+  - port: 8080
+  selector:
+    app: airflow
+---

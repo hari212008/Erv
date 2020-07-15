@@ -1,0 +1,246 @@
+###################################
+# Airflow - Common Configs
+###################################
+airflow:
+  ## configs for the docker image of the web/scheduler/worker
+  ##
+  image:
+    repository: apache/airflow
+    tag: 1.10.10-python3.6
+    ## values: Always or IfNotPresent
+    pullPolicy: IfNotPresent
+    pullSecret: ""
+
+  ## the airflow executor type to use
+  executor: CeleryExecutor
+
+  ##
+  fernetKey: "7T512UXSSmBOkpWimFHIVb8jK6lfmSAvx4mO6Arehnc="
+
+  ## environment variables for the web/scheduler/worker Pods (for airflow configs)
+  podDisruptionBudget:
+    ## if a PodDisruptionBudget resource is created for the scheduler
+    ##
+    enabled: true
+    maxUnavailable: "100%"
+    minAvailable: ""
+  pools: |
+    {}
+
+  ## the value of the `airflow --num_runs` parameter used to run the airflow scheduler
+  ##
+  numRuns: -1
+
+  ## if we run `airflow initdb` when the scheduler starts
+  ##
+  initdb: true
+
+  preinitdb: false
+  ##
+  initialStartupDelay: 0
+
+
+#EXAMPLE:
+  extraInitContainers:
+    - name: volume-mount-hack
+      image: busybox
+      command: ["sh", "-c", "chown -R 1000:1000 logs"]
+      volumeMounts:
+        - mountPath: /opt/airflow/logs
+          name: logs-data
+
+  extraInitContainers: []
+
+###################################
+# Airflow - WebUI Configs
+###################################
+web:
+  replicas: 1
+  service:
+    annotations: 
+      service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+      service.beta.kubernetes.io/aws-load-balancer-type: nlb
+      value: 0.0.0.0/0
+    sessionAffinity: "None"
+    sessionAffinityConfig: {}
+    type: LoadBalancer
+    externalPort: 8080
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    nodePort:
+      http: ""
+  baseUrl: "http://localhost:8080"
+
+  serializeDAGs: false
+  extraPipPackages: []
+  initialStartupDelay: 0
+  minReadySeconds: 5
+  readinessProbe:
+    enabled: false
+    scheme: HTTP
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 1
+    successThreshold: 1
+    failureThreshold: 3
+
+  livenessProbe:
+    enabled: true
+    scheme: HTTP
+    initialDelaySeconds: 300
+    periodSeconds: 30
+    timeoutSeconds: 3
+    successThreshold: 1
+    failureThreshold: 2
+
+  secretsDir: /var/airflow/secrets
+
+  secretsMap:
+
+workers:
+  enabled: true
+  replicas: 1
+  autoscaling:
+    enabled: false
+    maxReplicas: 2
+    metrics: []
+
+  initialStartupDelay: 0
+  celery:
+    instances: 1
+    gracefullTermination: false
+  terminationPeriod: 60
+  secretsDir: /var/airflow/secrets
+flower:
+  enabled: true
+  service:
+    annotations: {}
+    type: ClusterIP
+    externalPort: 5555
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+  initialStartupDelay: 0
+  extraConfigmapMounts: []
+logs:
+  path: /opt/airflow/logs
+  persistence:
+    enabled: false
+    existingClaim: ""
+    subPath: ""
+    storageClass: 
+    accessMode: ReadWriteMany
+    size: 1Gi
+dags:
+  path: /opt/airflow/dags
+  doNotPickle: false
+  installRequirements: false
+  persistence:
+    ## if a persistent volume is mounted at `dags.path`
+    ##
+    enabled: true
+#  volumes:  
+#  - name: airflow-web
+#    persistentVolumeClaim:
+#     claimName: nfs-airflow-dags  
+    ## the name of an existing PVC to use
+    ##
+    existingClaim: 
+   
+    subPath: ""
+
+    ## the name of the StorageClass used by the PVC
+    ##
+    ## NOTE:
+    ## - if set to "", then `PersistentVolumeClaim/spec.storageClassName` is omitted
+    ## - if set to "-", then `PersistentVolumeClaim/spec.storageClassName` is set to ""
+    ##
+    storageClass: ""
+
+    accessMode: ReadOnlyMany
+
+    size: 1Gi
+
+ingress:
+  enabled: false
+  web:
+    annotations: {}
+    path: ""
+    host: ""
+    livenessPath: ""
+    tls:
+      enabled: false
+      secretName: ""
+    precedingPaths: []
+    succeedingPaths: []
+  flower:
+    annotations: {}
+    path: ""
+
+    tls:
+      enabled: false
+      secretName: ""
+rbac:
+  create: true
+serviceAccount:
+  create: true
+
+  name: ""
+  annotations: {}
+
+postgresql:
+  enabled: true
+  ##
+  postgresqlDatabase: airflow
+
+  ## the postgres user to create
+  ##
+  postgresqlUsername: postgres
+
+  ## the postgres user's password
+  postgresqlPassword: airflow
+  existingSecretKey: "postgresql-password"
+  persistence:
+    enabled: true
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
+externalDatabase:
+  type: postgres
+  host: localhost
+  port: 5432
+  database: airflow
+  user: airflow
+  passwordSecret: ""
+  passwordSecretKey: "postgresql-password"
+
+redis:
+  enabled: true
+  password: airflow
+  existingSecret: ""
+  existingSecretKey: "redis-password"
+  cluster:
+    enabled: false
+    slaveCount: 1
+
+  master:
+    persistence:
+      enabled: false
+      storageClass: ""
+      accessModes:
+      - ReadWriteOnce
+      size: 8Gi
+  slave:
+    resources: {}
+    persistence:
+      enabled: false
+      storageClass: ""
+      accessModes:
+        - ReadWriteOnce
+      size: 8Gi
+externalRedis:
+  host: localhost
+  port: 6379
+  databaseNumber: 1
+  passwordSecret: ""
+  passwordSecretKey: "redis-password"
