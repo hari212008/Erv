@@ -656,11 +656,11 @@ logs:
   persistence:
     ## if a persistent volume is mounted at `logs.path`
     ##
-    enabled: false
+    enabled: true
 
     ## the name of an existing PVC to use
     ##
-    existingClaim: ""
+    existingClaim: nfs-airflow-logs
 
     ## sub-path under `logs.persistence.existingClaim` to use
     ##
@@ -672,7 +672,7 @@ logs:
     ## - if set to "", then `PersistentVolumeClaim/spec.storageClassName` is omitted
     ## - if set to "-", then `PersistentVolumeClaim/spec.storageClassName` is set to ""
     ##
-    storageClass: ""
+    storageClass: aws-efs
 
     ## the access mode of the PVC
     ##
@@ -717,11 +717,11 @@ dags:
   persistence:
     ## if a persistent volume is mounted at `dags.path`
     ##
-    enabled: false
+    enabled: true
 
     ## the name of an existing PVC to use
     ##
-    existingClaim: ""
+    existingClaim: nfs-airflow-dags
 
     ## sub-path under `dags.persistence.existingClaim` to use
     ##
@@ -733,7 +733,7 @@ dags:
     ## - if set to "", then `PersistentVolumeClaim/spec.storageClassName` is omitted
     ## - if set to "-", then `PersistentVolumeClaim/spec.storageClassName` is set to ""
     ##
-    storageClass: ""
+    storageClass: aws-efs
 
     ## the access mode of the PVC
     ##

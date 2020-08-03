@@ -1,6 +1,9 @@
 airflow:
   # Don't use this fernet key in production!
   fernet_key: "j0PNE8131Vx-ix7BsNDwskFUlnLa00mWU17BRujVcdY="
+  service:
+    type: NodePort
+
   image:
     repository: puckel/docker-airflow 
     tag: latest

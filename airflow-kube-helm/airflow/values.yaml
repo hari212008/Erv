@@ -145,7 +145,7 @@ airflow:
   ##     - name: synchronised-dags
   ##       mountPath: /opt/airflow/dags
   ##
-  extraVolumeMounts: []
+  extraVolumeMounts: [] 
 
   ## extra volumes for the web/scheduler/worker Pods
   ##
@@ -673,17 +673,16 @@ logs:
   ## the airflow logs folder
   ##
   path: /opt/airflow/logs
-
   ## configs for the logs PVC
   ##
   persistence:
     ## if a persistent volume is mounted at `logs.path`
     ##
-    enabled: false
+    enabled: true
 
     ## the name of an existing PVC to use
     ##
-    existingClaim: ""
+    existingClaim: nfs-airflow-logs
 
     ## sub-path under `logs.persistence.existingClaim` to use
     ##
@@ -695,7 +694,7 @@ logs:
     ## - if set to "", then `PersistentVolumeClaim/spec.storageClassName` is omitted
     ## - if set to "-", then `PersistentVolumeClaim/spec.storageClassName` is set to ""
     ##
-    storageClass: ""
+    storageClass: aws-efs
 
     ## the access mode of the PVC
     ##
@@ -706,7 +705,7 @@ logs:
     ## - different StorageClass support different access modes:
     ##   https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes
     ##
-    accessMode: ReadWriteMany
+    accessMode: ReadWriteOnce
 
     ## the size of PVC to request
     ##
@@ -740,11 +739,11 @@ dags:
   persistence:
     ## if a persistent volume is mounted at `dags.path`
     ##
-    enabled: false
+    enabled: true
 
     ## the name of an existing PVC to use
     ##
-    existingClaim: ""
+    existingClaim: nfs-airflow-dags
 
     ## sub-path under `dags.persistence.existingClaim` to use
     ##
@@ -756,7 +755,7 @@ dags:
     ## - if set to "", then `PersistentVolumeClaim/spec.storageClassName` is omitted
     ## - if set to "-", then `PersistentVolumeClaim/spec.storageClassName` is set to ""
     ##
-    storageClass: ""
+    storageClass: aws-efs
 
     ## the access mode of the PVC
     ##
@@ -767,7 +766,7 @@ dags:
     ## - different StorageClass support different access modes:
     ##   https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes
     ##
-    accessMode: ReadOnlyMany
+    accessMode: ReadWriteOnce
 
     ## the size of PVC to request
     ##
